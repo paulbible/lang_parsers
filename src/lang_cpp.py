@@ -20,7 +20,7 @@ class CppLexer(Lexer):
               EQ, ASSIGN, REF, AND, OR,
               LPAREN, RPAREN, LBRACE, RBRACE, LSQBRACE, RSQBRACE,
               LT, LTE, GT, GTE, NOTEQ, NOT,
-              SCOPE, OUTSTREAM, INSTREAM,
+              SCOPE, ARROW, OUTSTREAM, INSTREAM,
               RETURN, IF, ELSE, FOR, WHILE, SWITCH, DO,
               STATIC, CONST, PUBLIC, PRIVATE, PROTECTED, VIRTUAL,
               QUOTED, CHARLIT}
@@ -102,16 +102,18 @@ class CppLexer(Lexer):
 
     MOD = r'%'
 
+    ARROW = r'->'
+
 
 class CppParser(Parser):
     debugfile = "parser.out"
     tokens = CppLexer.tokens
 
-    precedence = (
-        ('left', PLUS, MINUS),
-        ('left', TIMES, DIVIDE),
-        ('left', AND, OR),
-    )
+    # precedence = (
+    #     ('left', PLUS, MINUS),
+    #     ('left', TIMES, DIVIDE),
+    #     ('left', AND, OR),
+    # )
 
     @_('statements statement',
        'statement')
@@ -129,7 +131,7 @@ class CppParser(Parser):
        'expr ";"',
        'returnstatement')
     def statement(self, p):
-        # print('statement')
+        print('statement')
         pass
 
     @_('COMMENT')
@@ -151,34 +153,34 @@ class CppParser(Parser):
     def empty(self, p):
         pass
 
-    @_('RETURN expr ";"')
+    @_('RETURN val_expr ";"')
     def returnstatement(self, p):
         #print("return statement")
         pass
 
-    @_('IF LPAREN expr RPAREN block')
+    @_('IF LPAREN val_expr RPAREN block')
     def ifstatement(self, p):
-        # print("if statement block")
+        print("if statement block")
         pass
 
-    @_('IF LPAREN expr RPAREN expr')
-    def ifstatement(self, p):
-        # print("if statement not bracket {BAD}")
-        pass
-
-    @_('IF LPAREN expr RPAREN block ELSE block')
-    def ifstatement(self, p):
-        # print("if-else statement blocks")
-        pass
-
-    @_('IF LPAREN expr RPAREN block ELSE ifstatement')
-    def ifstatement(self, p):
-        # print("if-else-if statement")
-        pass
+    # @_('IF LPAREN cond_expr RPAREN statement')
+    # def ifstatement(self, p):
+    #     print("if statement not bracket {BAD}")
+    #     pass
+    #
+    # @_('IF LPAREN cond_expr RPAREN block ELSE block')
+    # def ifstatement(self, p):
+    #     print("if-else statement blocks")
+    #     pass
+    #
+    # @_('IF LPAREN cond_expr RPAREN block ELSE ifstatement')
+    # def ifstatement(self, p):
+    #     print("if-else-if statement")
+    #     pass
 
     @_('ID ID LPAREN paramlist RPAREN block')
     def funcdec(self, p):
-        # print('func declaration', p.ID1)
+        print('func declaration', p.ID1)
         pass
 
     @_('LBRACE statements RBRACE')
@@ -216,12 +218,13 @@ class CppParser(Parser):
     def params(self, p):
         pass
 
-    @_('WHILE LPAREN expr RPAREN block')
+    @_('WHILE LPAREN val_expr RPAREN block')
     def whileloop(self, p):
         pass
 
-    @_('FOR LPAREN declare ";" expr ";" expr RPAREN block')
+    @_('FOR LPAREN declare ";" val_expr ";" val_expr RPAREN block')
     def forloop(self, p):
+        print('for loop')
         pass
 
     @_('ID ID')
@@ -239,55 +242,224 @@ class CppParser(Parser):
         # print('declaration', p.decassign)
         pass
 
-    @_('ID ID ASSIGN expr')
+    @_('ID ID ASSIGN val_expr')
     def decassign(self, p):
-        # print('declaration and assignment')
-        pass
+        print('declaration and assignment', "type: %s, name: %s" % (p.ID0, p.ID1))
         return "type: %s, name: %s" % (p.ID0, p.ID1)
 
-    @_('CHARLIT',
-       'LPAREN expr RPAREN',
-       'binaryexpr',
-       'assignment',
+    @_('assignment',
        'declare',
        'streamexpr',
-       'functioncall',
-       'condition',
-       'incexpr',
-       'name',
-       'QUOTED',
-       'NUMBER',
-       'FLOAT',
-       'empty')
+       'empty',
+       'val_expr')
     def expr(self, p):
         # print("expr", p)
         pass
 
+    @_('lit_expr')
+    def val_expr(self, p):
+        pass
+
+    @_('add_expr')
+    def val_expr(self, p):
+        pass
+
+    @_('cond_expr')
+    def val_expr(self, p):
+        print('val_expr', p.cond_expr)
+        return 'val_expr', p.cond_expr
+
+    @_('CHARLIT')
+    def lit_expr(self, p):
+        pass
+
+    @_('QUOTED')
+    def lit_expr(self, p):
+        pass
+
+    @_('add_expr PLUS mult_expr')
+    def add_expr(self, p):
+        pass
+
+    @_('add_expr MINUS mult_expr')
+    def add_expr(self, p):
+        pass
+
+    @_('mult_expr')
+    def add_expr(self, p):
+        print('mult_expr', p.mult_expr)
+        return 'mult_expr', p.mult_expr
+
+    @_('mult_expr TIMES prime_expr')
+    def mult_expr(self, p):
+        print('mult_expr *', p.mult_expr, p.prime_expr)
+        return 'mult_expr *', p.mult_expr, p.prime_expr
+
+    @_('mult_expr DIVIDE prime_expr')
+    def mult_expr(self, p):
+        pass
+
+    @_('mult_expr MOD prime_expr')
+    def mult_expr(self, p):
+        pass
+
+    @_('prime_expr')
+    def mult_expr(self, p):
+        print('mult primary', p.prime_expr)
+        return 'mult_primary', p.prime_expr
+
+    # @_('LPAREN add_expr RPAREN')
+    # def prime_expr(self, p):
+    #     print('primary')
+    #     return 'primary ()', p.add_expr
+
+    # @_('functioncall')
+    # def prime_expr(self, p):
+    #     pass
+
+    @_('NUMBER')
+    def prime_expr(self, p):
+        return 'Number', p.NUMBER
+
+    @_('FLOAT')
+    def prime_expr(self, p):
+        return 'Float', p.FLOAT
+
+    @_('name_expr')
+    def prime_expr(self, p):
+        print('prime_expr', p.name_expr)
+        return 'prime_expr', p.name_expr
+
+    @_('name_expr "." id_expr')
+    def name_expr(self, p):
+        print('name_expr .', p.name_expr, p.id_expr)
+        return 'name_expr .', p.name_expr, p.id_expr
+
+    @_('name_expr SCOPE id_expr')
+    def name_expr(self, p):
+        print('name_exp ::', p.id_expr)
+        return 'name_exp ::', p.id_expr
+
+    @_('name_expr ARROW id_expr')
+    def name_expr(self, p):
+        print('name_exp ->', p.id_expr)
+        return 'name_exp ->', p.id_expr
+
+    @_('PLUS PLUS name_expr')
+    def name_expr(self, p):
+        print('++name', p.name)
+        return '++name', p.name
+
+    @_('name_expr PLUS PLUS')
+    def name_expr(self, p):
+        print('name++', p.name)
+        return 'name++', p.name
+
+    @_('MINUS MINUS name_expr')
+    def name_expr(self, p):
+        print('name', p.name)
+        pass
+
+    @_('name_expr MINUS MINUS')
+    def name_expr(self, p):
+        print('name', p.name)
+        pass
+
+    @_('id_expr')
+    def name_expr(self, p):
+        print('name_exp', p.id_expr)
+        return 'name_exp', p.id_expr
+
     @_('ID')
-    def name(self, p):
-        # print("name")
-        pass
-        return p.ID
+    def id_expr(self, p):
+        print('id_expr', p.ID)
+        return 'id_expr', p.ID
 
-    @_('ID SCOPE ID')
-    def name(self, p):
-        pass
-        return "".join([p.ID0, p.SCOPE, p.ID1])
+    @_('id_expr LSQBRACE val_expr RSQBRACE')
+    def id_expr(self, p):
+        print("id_expr array access", p.id_expr, p.val_expr)
+        return "id_expr array access", p.id_expr, p.val_expr
 
-    @_('ID "." ID')
-    def name(self, p):
-        pass
-        return "".join([p.ID0, ".", p.ID1])
+    @_('id_expr LPAREN arglist RPAREN')
+    def id_expr(self, p):
+        print("id_expr function call", p.id_expr, p.arglist)
+        return "id_expr function call", p.id_expr, p.arglist
 
-    @_('name LSQBRACE expr RSQBRACE')
-    def name(self, p):
-        pass
-        return "%s[expr]" % p.name
+    # @_('name')
+    # def id_expr(self, p):
+    #     print('id_expr', p.name)
+    #     return 'id_expr', p.name
 
-    @_('name LPAREN arglist RPAREN')
-    def functioncall(self, p):
-        # print("function call", p.name)
+    @_('logic_expr')
+    def cond_expr(self, p):
+        print('cond_expr', p.logic_expr)
+        return 'cond_expr', p.logic_expr
+
+    @_('logic_expr AND logic_expr')
+    def logic_expr(self, p):
+        print('logic_expr AND', p.logic_expr, p.logic_expr)
+        return 'logic_expr AND', p.logic_expr, p.logic_expr
+
+    @_('logic_expr OR logic_expr')
+    def logic_expr(self, p):
+        print('logic_expr OR', p.logic_expr, p.logic_expr)
+        return 'logic_expr OR', p.logic_expr, p.logic_expr
+
+    @_('NOT logic_expr')
+    def logic_expr(self, p):
+        print('logic_expr NOT', p.logic_expr)
+        return 'logic_expr NOT', p.logic_expr
+
+    @_('LPAREN logic_expr RPAREN')
+    def logic_expr(self, p):
+        print('logic_expr ()', p.logic_expr)
+        return 'logic_expr ()', p.logic_expr
+
+    @_('rel_expr')
+    def logic_expr(self, p):
         pass
+
+    @_('id_expr')
+    def logic_expr(self, p):
+        pass
+
+    @_('val_expr relop val_expr')
+    def rel_expr(self, p):
+        pass
+
+    @_('GT', 'GTE',
+       'LT', 'LTE',
+       'EQ',
+       'NOTEQ')
+    def relop(self, p):
+        pass
+
+
+    # Names etc.
+    # @_('ID')
+    # def name(self, p):
+    #     # print("name")
+    #     return p.ID
+
+    # @_('ID SCOPE ID')
+    # def name(self, p):
+    #     pass
+    #     return "".join([p.ID0, p.SCOPE, p.ID1])
+    #
+    # @_('ID "." ID')
+    # def name(self, p):
+    #     pass
+    #     return "".join([p.ID0, ".", p.ID1])
+
+    # @_('name LSQBRACE val_expr RSQBRACE')
+    # def name(self, p):
+    #     pass
+    #     return "%s[expr]" % p.name
+    #
+    # @_('name LPAREN arglist RPAREN')
+    # def functioncall(self, p):
+    #     # print("function call", p.name)
+    #     pass
 
     @_('empty',
        'args')
@@ -299,76 +471,47 @@ class CppParser(Parser):
     def args(self, p):
         pass
 
-    @_('expr')
+    @_('val_expr')
     def arg(self, p):
         pass
 
-    @_('expr OUTSTREAM expr',
-       'expr INSTREAM expr')
+    @_('val_expr OUTSTREAM expr',
+       'val_expr INSTREAM expr')
     def streamexpr(self, p):
         # print("stream expr: ")
         pass
 
-    @_('expr PLUS expr',
-       'expr MINUS expr',
-       'expr TIMES expr',
-       'expr DIVIDE expr',
-       'expr AND expr',
-       'expr OR expr',
-       'expr MOD expr')
-    def binaryexpr(self, p):
-        # print("binary expr")
+
+    @_('name_expr ASSIGN val_expr')
+    def assignment(self, p):
+        print('assignment')
         pass
 
-    @_('name ASSIGN expr')
+    @_('name_expr PLUSEQ val_expr')
     def assignment(self, p):
         # print('assignment')
         pass
 
-    @_('name PLUSEQ expr')
+    @_('name_expr MINUSEQ val_expr')
     def assignment(self, p):
         # print('assignment')
         pass
 
-    @_('name MINUSEQ expr')
+    @_('name_expr TIMESEQ val_expr')
     def assignment(self, p):
         # print('assignment')
         pass
 
-    @_('name TIMESEQ expr')
+    @_('name_expr DIVEQ val_expr')
     def assignment(self, p):
         # print('assignment')
-        pass
-
-    @_('name DIVEQ expr')
-    def assignment(self, p):
-        # print('assignment')
-        pass
-
-    @_('PLUS PLUS ID',
-       'ID PLUS PLUS')
-    def incexpr(self, p):
-        # print("inc expr", p.ID)
-        pass
-
-    @_('NOT expr',
-       'expr relop expr')
-    def condition(self, p):
-        # print("condition")
-        pass
-
-    @_('GT', 'GTE',
-       'LT', 'LTE',
-       'EQ',
-       'NOTEQ')
-    def relop(self, p):
         pass
 
     def error(self, p):
         if p:
             print(">>>>>>>>>>")
             print("Syntax error at token:", p.value)
-            print(dir(p))
+            print(p)
             print(p.type)
             print(p.index)
             print(p.value)

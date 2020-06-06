@@ -19,17 +19,17 @@ class TestCppParser(unittest.TestCase):
             tokens = lexer.tokenize(data)
             outputs = parser.parse(tokens)
 
-    def test_parse_array_prog(self):
+    def ztest_parse_array_prog(self):
         print('##### Array #####')
         data_file = '../data/cpp/array_file_main.cpp'
         self.parse_file(data_file)
 
-    def test_parse_chaos_prog(self):
+    def ztest_parse_chaos_prog(self):
         print('##### chaos #####')
         data_file = '../data/cpp/chaos_main.cpp'
         self.parse_file(data_file)
 
-    def test_parse_cout(self):
+    def ztest_parse_cout(self):
         print('##### Simple Cout test #####')
         data_file = '../data/cpp/cout_test.cpp'
         self.parse_file(data_file)
@@ -39,12 +39,12 @@ class TestCppParser(unittest.TestCase):
         data_file = '../data/cpp/game_main.cpp'
         self.parse_file(data_file)
 
-    def test_parse_simple_prog(self):
+    def ztest_parse_simple_prog(self):
         print('##### Simple Prog #####')
         data_file = '../data/cpp/main_test.cpp'
         self.parse_file(data_file)
 
-    def test_parse_sdl_prog(self):
+    def ztest_parse_sdl_prog(self):
         print('##### SDL prog #####')
         data_file = '../data/cpp/sdl_hello_world_main.cpp'
         self.parse_file(data_file)
